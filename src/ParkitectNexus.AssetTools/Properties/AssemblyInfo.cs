@@ -21,12 +21,12 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 
 [assembly: AssemblyTitle("ParkitectNexus.AssetTools")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Back-end tooling for ParkitectNexus.com to extract information from blueprints and savegames, and to modify blueprint images.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("ParkitectNexus")]
 [assembly: AssemblyProduct("ParkitectNexus.AssetTools")]
-[assembly: AssemblyCopyright("Copyright ©  2015")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCopyright("Copyright © ParkitectNexus, Tim Potze 2015")]
+[assembly: AssemblyTrademark("ParkitectNexus")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
