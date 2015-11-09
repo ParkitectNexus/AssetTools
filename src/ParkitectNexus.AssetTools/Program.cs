@@ -141,12 +141,12 @@ namespace ParkitectNexus.AssetTools
                                         new Rectangle(new Point(options.LogoX, options.LogoY),
                                             new Size(options.LogoWidth, options.LogoHeight)));
                                 }
-						}
+                        }
 
-						var blueprintWriter = new BlueprintWriter();
-						blueprintWriter.Write(blueprint, bitmap);
+                        var blueprintWriter = new BlueprintWriter();
+                        blueprintWriter.Write(blueprint, bitmap);
 
-						bitmap.Save(options.Output);
+                        bitmap.Save(options.Output);
                     }
                 }
             }
