@@ -16,7 +16,10 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using CommandLine;
 using Newtonsoft.Json;
 using ParkitectNexus.AssetMagic;
@@ -26,6 +29,32 @@ using ParkitectNexus.AssetTools.OptionSets;
 
 namespace ParkitectNexus.AssetTools
 {
+    internal class FontTools
+    {
+        public static FontFamily LoadFontFamily(byte[] buffer, out PrivateFontCollection fontCollection)
+        {
+            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            try
+            {
+                var ptr = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
+                fontCollection = new PrivateFontCollection();
+                fontCollection.AddMemoryFont(ptr, buffer.Length);
+                return fontCollection.Families[0];
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+        public static FontFamily LoadFontFamily(Stream stream, out PrivateFontCollection fontCollection)
+        {
+            var buffer = new byte[stream.Length];
+            stream.Read(buffer, 0, buffer.Length);
+            return LoadFontFamily(buffer, out fontCollection);
+        }
+    }
+
     internal class Program
     {
         private static void Main(string[] args)
@@ -43,7 +72,7 @@ namespace ParkitectNexus.AssetTools
             {
                 Environment.Exit(Parser.DefaultExitCodeFail);
             }
-
+            
             switch (verb)
             {
                 case "blueprint":
@@ -141,6 +170,60 @@ namespace ParkitectNexus.AssetTools
                                         new Rectangle(new Point(options.LogoX, options.LogoY),
                                             new Size(options.LogoWidth, options.LogoHeight)));
                                 }
+
+
+                            if (!string.IsNullOrWhiteSpace(options.Font) && (options.DrawText?.Any() ?? false))
+                            {
+                                Font font;
+
+                                PrivateFontCollection fonts = null;
+                                FontFamily family = null;
+
+                                if (options.Font.EndsWith(".ttf"))
+                                {
+                                    using (var file = File.OpenRead(options.Font))
+                                        family = FontTools.LoadFontFamily(file, out fonts);
+
+                                    font = new Font(family, options.FontSize, options.FontStyle);
+                                }
+                                else
+                                {
+                                    font = new Font(options.Font, options.FontSize, options.FontStyle);
+                                }
+
+                                Color color = Color.Black;
+
+                                try
+                                {
+                                    int iColorInt =
+                                        Convert.ToInt32(
+                                            options.FontColor.Substring(options.FontColor.StartsWith("#") ? 1 : 0),
+                                            16);
+                                    color = Color.FromArgb(iColorInt);
+                                }
+                                catch
+                                {
+                                }
+
+                                foreach (var text in options.DrawText)
+                                {
+                                    var split = text.Split(new[] {' '}, 2);
+                                    if (split.Length != 2)
+                                        continue;
+                                    var pos = split[0].Split(',');
+                                    int x, y;
+                                    if (pos.Length != 2 || !int.TryParse(pos[0], out x) || !int.TryParse(pos[1], out y))
+                                        continue;
+                                    
+                                    var txt = split[1];
+                                    
+                                    g.DrawString(txt, font, new SolidBrush(color), x, y);
+                                }
+
+                                font.Dispose();
+                                family?.Dispose();
+                                fonts?.Dispose();
+                            }
                         }
 
                         var blueprintWriter = new BlueprintWriter();

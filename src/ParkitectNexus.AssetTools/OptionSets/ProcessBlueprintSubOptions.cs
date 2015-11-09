@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Drawing;
 using CommandLine;
 
 namespace ParkitectNexus.AssetTools.OptionSets
@@ -39,5 +40,20 @@ namespace ParkitectNexus.AssetTools.OptionSets
 
         [Option("logo-height", HelpText = "target height of logo", DefaultValue = 80)]
         public int LogoHeight { get; set; }
+
+        [Option("font", HelpText = "font used for drawing text", DefaultValue = "Arial")]
+        public string Font { get; set; }
+
+        [Option("font-size", HelpText = "font size used for drawing text", DefaultValue = 12f)]
+        public float FontSize { get; set; }
+
+        [Option("font-color", HelpText = "color used for drawing text", DefaultValue = "ff000000")]
+        public string FontColor { get; set; }
+
+        [OptionArray("draw-text", HelpText = "text to be drawn")]
+        public string[] DrawText { get; set; }
+
+        [Option("font-style", HelpText = "font style used for drawing text")]
+        public FontStyle FontStyle { get; set; }
     }
 }
