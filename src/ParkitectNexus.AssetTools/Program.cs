@@ -20,6 +20,7 @@ using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using CommandLine;
 using Newtonsoft.Json;
 using ParkitectNexus.AssetMagic;
@@ -76,10 +77,13 @@ namespace ParkitectNexus.AssetTools
             switch (verb)
             {
                 case "blueprint":
-                    ProcesssBlueprint(subOptions as ProcessBlueprintSubOptions);
+                    ProcesssBlueprint(subOptions as FileProcessingSubOptions);
                     break;
                 case "savegame":
-                    ProcessSavegame(subOptions as ProcessSavegameSubOptions);
+                    ProcessSavegame(subOptions as FileProcessingSubOptions);
+                    break;
+                case "blueprint-convert":
+                    ConvertBlueprint(subOptions as BlueprintConvertSubOptions);
                     break;
                 default:
                     Console.WriteLine(options.GetUsage(null));
@@ -104,7 +108,7 @@ namespace ParkitectNexus.AssetTools
             }
         }
 
-        private static void ProcesssBlueprint(ProcessBlueprintSubOptions options)
+        private static void ConvertBlueprint(BlueprintConvertSubOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -112,135 +116,184 @@ namespace ParkitectNexus.AssetTools
 
             try
             {
-                using (var bitmap = (Bitmap) Image.FromFile(options.Input))
+
+                using (
+                    var bitmap = options.IsRaw
+                        ? new Bitmap(new MemoryStream(Convert.FromBase64String(options.Input)))
+                        : (Bitmap) Image.FromFile(options.Input))
                 {
                     var blueprintReader = new BlueprintReader();
                     var blueprint = blueprintReader.Read(bitmap);
 
-                    if (options.DumpData)
+                    using (var g = Graphics.FromImage(bitmap))
                     {
-                        Console.WriteLine(JsonConvert.SerializeObject(new BlueprintDump(blueprint),
-                            new JsonSerializerSettings
+                        // Remove default logo.
+                        if (!string.IsNullOrWhiteSpace(options.Background))
+                            using (var bg = Image.FromFile(options.Background))
                             {
-                                ContractResolver = new DumpDataResolver(
-                                    "Type",
-                                    "Data",
-                                    "IsEmpty",
-                                    "Id",
-                                    "ContentTypes",
-                                    "Position",
-                                    "Rotation",
-                                    "CarColors",
-                                    "TrackColors",
-                                    "TrackId",
-                                    "StationControllers"
-                                    )
-                            }));
+                                var path = new GraphicsPath();
+                                path.AddPolygon(new[]
+                                {
+                                    new Point(0, 437),
+                                    new Point(175, 437),
+                                    new Point(175, 437),
+                                    new Point(200, 465),
+                                    new Point(200, 511),
+                                    new Point(0, 511)
+                                });
+
+                                g.SetClip(path);
+                                g.DrawImage(bg, new Rectangle(new Point(), bg.Size));
+                            }
+
+                        // Replace with custom logo.
+                        if (!string.IsNullOrWhiteSpace(options.Logo))
+                            using (var logo = Image.FromFile(options.Logo))
+                            {
+                                g.SetClip(new Rectangle(new Point(), bitmap.Size));
+                                g.DrawImage(logo,
+                                    new Rectangle(new Point(options.LogoX, options.LogoY),
+                                        new Size(options.LogoWidth, options.LogoHeight)));
+                            }
+
+
+                        if (!string.IsNullOrWhiteSpace(options.Font) && (options.DrawText?.Any() ?? false))
+                        {
+                            Font prototypeFont;
+
+                            PrivateFontCollection fonts = null;
+                            FontFamily family = null;
+
+                            if (options.Font.EndsWith(".ttf"))
+                            {
+                                using (var file = File.OpenRead(options.Font))
+                                    family = FontTools.LoadFontFamily(file, out fonts);
+
+                                prototypeFont = new Font(family, 10, options.FontStyle);
+                            }
+                            else
+                            {
+                                prototypeFont = new Font(options.Font, 10, options.FontStyle);
+                            }
+                            
+                            foreach (var text in options.DrawText)
+                            {
+                                var split = text.Split(new[] {' '}, 2);
+
+                                if (split.Length != 2)
+                                    continue;
+
+                                var meta = split[0].Split(',');
+
+                                int x, y;
+                                float size;
+                                if (meta.Length < 4 || !int.TryParse(meta[0], out x) || !int.TryParse(meta[1], out y) ||
+                                    !float.TryParse(meta[3], out size))
+                                    continue;
+
+                                using (var font = new Font(prototypeFont.FontFamily, size, prototypeFont.Style))
+                                    g.DrawString(split[1], font, new SolidBrush(GetColorFromString(meta[2])), x, y);
+                            }
+
+                            prototypeFont.Dispose();
+                            family?.Dispose();
+                            fonts?.Dispose();
+                        }
                     }
 
-                    if (options.Output != null)
+                    var blueprintWriter = new BlueprintWriter();
+                    blueprintWriter.Write(blueprint, bitmap);
+
+                    using (var stream = new MemoryStream())
                     {
-                        using (var g = Graphics.FromImage(bitmap))
-                        {
-                            // Remove default logo.
-                            if (!string.IsNullOrWhiteSpace(options.Background))
-                                using (var bg = Image.FromFile(options.Background))
-                                {
-                                    var path = new GraphicsPath();
-                                    path.AddPolygon(new[]
-                                    {
-                                        new Point(0, 437),
-                                        new Point(175, 437),
-                                        new Point(175, 437),
-                                        new Point(200, 465),
-                                        new Point(200, 511),
-                                        new Point(0, 511)
-                                    });
-
-                                    g.SetClip(path);
-                                    g.DrawImage(bg, new Rectangle(new Point(), bg.Size));
-                                }
-
-                            // Replace with custom logo.
-                            if (!string.IsNullOrWhiteSpace(options.Logo))
-                                using (var logo = Image.FromFile(options.Logo))
-                                {
-                                    g.SetClip(new Rectangle(new Point(), bitmap.Size));
-                                    g.DrawImage(logo,
-                                        new Rectangle(new Point(options.LogoX, options.LogoY),
-                                            new Size(options.LogoWidth, options.LogoHeight)));
-                                }
-
-
-                            if (!string.IsNullOrWhiteSpace(options.Font) && (options.DrawText?.Any() ?? false))
-                            {
-                                Font font;
-
-                                PrivateFontCollection fonts = null;
-                                FontFamily family = null;
-
-                                if (options.Font.EndsWith(".ttf"))
-                                {
-                                    using (var file = File.OpenRead(options.Font))
-                                        family = FontTools.LoadFontFamily(file, out fonts);
-
-                                    font = new Font(family, options.FontSize, options.FontStyle);
-                                }
-                                else
-                                {
-                                    font = new Font(options.Font, options.FontSize, options.FontStyle);
-                                }
-
-                                Color color = Color.Black;
-
-                                try
-                                {
-                                    int iColorInt =
-                                        Convert.ToInt32(
-                                            options.FontColor.Substring(options.FontColor.StartsWith("#") ? 1 : 0),
-                                            16);
-                                    color = Color.FromArgb(iColorInt);
-                                }
-                                catch
-                                {
-                                }
-
-                                foreach (var text in options.DrawText)
-                                {
-                                    var split = text.Split(new[] {' '}, 2);
-                                    if (split.Length != 2)
-                                        continue;
-                                    var pos = split[0].Split(',');
-                                    int x, y;
-                                    if (pos.Length != 2 || !int.TryParse(pos[0], out x) || !int.TryParse(pos[1], out y))
-                                        continue;
-                                    
-                                    var txt = split[1];
-                                    
-                                    g.DrawString(txt, font, new SolidBrush(color), x, y);
-                                }
-
-                                font.Dispose();
-                                family?.Dispose();
-                                fonts?.Dispose();
-                            }
-                        }
-
-                        var blueprintWriter = new BlueprintWriter();
-                        blueprintWriter.Write(blueprint, bitmap);
-
-                        bitmap.Save(options.Output);
+                        bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                        Console.WriteLine(Convert.ToBase64String(stream.ToArray()));
                     }
                 }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("invalid input");
+                Environment.Exit(1);
             }
             catch (InvalidBlueprintException)
             {
                 Console.WriteLine("invalid blueprint");
                 Environment.Exit(1);
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Environment.Exit(1);
+            }
         }
 
-        private static void ProcessSavegame(ProcessSavegameSubOptions options)
+        private static Color GetColorFromString(string text)
+        {
+            try
+            {
+                   return Color.FromArgb(
+                        Convert.ToInt32(
+                            text.Substring(text.StartsWith("#") ? 1 : 0), 16));
+            }
+            catch
+            {
+                return Color.Black;
+            }
+        }
+
+        private static void ProcesssBlueprint(FileProcessingSubOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            AssertFileOfType(options.Input, ".png");
+
+            try
+            {
+                using (var bitmap = options.IsRaw
+                        ? new Bitmap(new MemoryStream(Convert.FromBase64String(options.Input)))
+                        : (Bitmap)Image.FromFile(options.Input))
+                {
+                    var blueprintReader = new BlueprintReader();
+                    var blueprint = blueprintReader.Read(bitmap);
+
+                    Console.WriteLine(JsonConvert.SerializeObject(new BlueprintDump(blueprint),
+                        new JsonSerializerSettings
+                        {
+                            ContractResolver = new DumpDataResolver(
+                                "Type",
+                                "Data",
+                                "IsEmpty",
+                                "Id",
+                                "ContentTypes",
+                                "Position",
+                                "Rotation",
+                                "CarColors",
+                                "TrackColors",
+                                "TrackId",
+                                "StationControllers"
+                                )
+                        }));
+                }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("invalid input");
+                Environment.Exit(1);
+            }
+            catch (InvalidBlueprintException)
+            {
+                Console.WriteLine("invalid blueprint");
+                Environment.Exit(1);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Environment.Exit(1);
+            }
+        }
+
+        private static void ProcessSavegame(FileProcessingSubOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -248,33 +301,43 @@ namespace ParkitectNexus.AssetTools
 
             try
             {
-                using (var stream = File.OpenRead(options.Input))
+                using (
+                    var stream = options.IsRaw
+                        ? new MemoryStream(Encoding.UTF8.GetBytes(options.Input))
+                        : (Stream) File.OpenRead(options.Input))
                 {
                     var savegameReader = new SavegameReader();
                     var savegame = savegameReader.Deserialize(stream);
 
-                    if (options.DumpData)
-                    {
-                        Console.WriteLine(JsonConvert.SerializeObject(new SavegameDump(savegame),
-                            new JsonSerializerSettings
-                            {
-                                ContractResolver = new DumpDataResolver(
-                                    "Type",
-                                    "Data",
-                                    "IsEmpty",
-                                    "Id",
-                                    "JobAgency",
-                                    "Patches",
-                                    "Zones",
-                                    "Transactions"
-                                    )
-                            }));
-                    }
+                    Console.WriteLine(JsonConvert.SerializeObject(new SavegameDump(savegame),
+                        new JsonSerializerSettings
+                        {
+                            ContractResolver = new DumpDataResolver(
+                                "Type",
+                                "Data",
+                                "IsEmpty",
+                                "Id",
+                                "JobAgency",
+                                "Patches",
+                                "Zones",
+                                "Transactions"
+                                )
+                        }));
                 }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("invalid input");
+                Environment.Exit(1);
             }
             catch (InvalidSavegameException)
             {
                 Console.WriteLine("invalid savegame");
+                Environment.Exit(1);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
                 Environment.Exit(1);
             }
         }

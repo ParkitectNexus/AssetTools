@@ -23,11 +23,14 @@ namespace ParkitectNexus.AssetTools.OptionSets
 {
     public class Options
     {
-        [VerbOption("blueprint", HelpText = "Extract information from a blueprint or change the design of a blueprint")]
-        public ProcessBlueprintSubOptions BlueprintVerb { get; set; }
+        [VerbOption("blueprint", HelpText = "Extract information from a blueprint")]
+        public FileProcessingSubOptions BlueprintVerb { get; set; }
 
         [VerbOption("savegame", HelpText = "Extract information from a savegame")]
-        public ProcessSavegameSubOptions SavegameVerb { get; set; }
+        public FileProcessingSubOptions SavegameVerb { get; set; }
+
+        [VerbOption("blueprint-convert", HelpText = "Convert design of a blueprint")]
+        public BlueprintConvertSubOptions BlueprintConvertVerb { get; set; }
 
         [HelpVerbOption]
         public string GetUsage(string verb)
@@ -44,7 +47,7 @@ namespace ParkitectNexus.AssetTools.OptionSets
             help.AddPreOptionsLine(" ");
             help.AddPreOptionsLine($"usage: {name.Name} {verb ?? "<command>"}");
 
-            object optionsInstanceByName = verb == null
+            var optionsInstanceByName = verb == null
                 ? null
                 : GetType()
                     .GetProperties()

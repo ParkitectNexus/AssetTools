@@ -57,8 +57,7 @@
     <Compile Include="DumpDataResolver.cs" />
     <Compile Include="OptionSets\FileProcessingSubOptions.cs" />
     <Compile Include="OptionSets\Options.cs" />
-    <Compile Include="OptionSets\ProcessBlueprintSubOptions.cs" />
-    <Compile Include="OptionSets\ProcessSavegameSubOptions.cs" />
+    <Compile Include="OptionSets\BlueprintConvertSubOptions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SavegameDump.cs" />

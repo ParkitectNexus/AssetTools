@@ -17,12 +17,12 @@ using CommandLine;
 
 namespace ParkitectNexus.AssetTools.OptionSets
 {
-    public abstract class FileProcessingSubOptions
+    public class FileProcessingSubOptions
     {
         [Option("input", Required = true, HelpText = "The input file to process")]
         public string Input { get; set; }
 
-        [Option("dump-data", HelpText = "Dump information about this asset to the console")]
-        public bool DumpData { get; set; }
+        [Option("raw", HelpText = "Indicates input is raw (not a file path)")]
+        public bool IsRaw { get; set; }
     }
 }

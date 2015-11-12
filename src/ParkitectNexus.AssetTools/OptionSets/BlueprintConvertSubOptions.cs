@@ -18,11 +18,8 @@ using CommandLine;
 
 namespace ParkitectNexus.AssetTools.OptionSets
 {
-    public class ProcessBlueprintSubOptions : FileProcessingSubOptions
+    public class BlueprintConvertSubOptions : FileProcessingSubOptions
     {
-        [Option("output", HelpText = "The output path")]
-        public string Output { get; set; }
-
         [Option("background", HelpText = "Path to the background image", DefaultValue = "blueprint_bg.png")]
         public string Background { get; set; }
 
@@ -43,13 +40,7 @@ namespace ParkitectNexus.AssetTools.OptionSets
 
         [Option("font", HelpText = "font used for drawing text", DefaultValue = "Arial")]
         public string Font { get; set; }
-
-        [Option("font-size", HelpText = "font size used for drawing text", DefaultValue = 12f)]
-        public float FontSize { get; set; }
-
-        [Option("font-color", HelpText = "color used for drawing text", DefaultValue = "ff000000")]
-        public string FontColor { get; set; }
-
+        
         [OptionArray("draw-text", HelpText = "text to be drawn")]
         public string[] DrawText { get; set; }
 
