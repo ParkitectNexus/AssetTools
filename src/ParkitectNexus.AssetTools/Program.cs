@@ -16,6 +16,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.IO;
 using System.Linq;
@@ -92,16 +93,16 @@ namespace ParkitectNexus.AssetTools
             }
         }
 
-        private static void AssertFileOfType(string path, string extension)
+        private static void AssertFileOfType(string input, string extension, bool isRaw)
         {
             if (extension == null) throw new ArgumentNullException(nameof(extension));
 
-            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            if (string.IsNullOrWhiteSpace(input) || (!isRaw && !File.Exists(input)))
             {
                 Console.WriteLine("specified path does not exist");
                 Environment.Exit(1);
             }
-            if (Path.GetExtension(path) != extension)
+            if (!isRaw && Path.GetExtension(input) != extension)
             {
                 Console.WriteLine("invalid file type");
                 Environment.Exit(1);
@@ -112,7 +113,7 @@ namespace ParkitectNexus.AssetTools
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            AssertFileOfType(options.Input, ".png");
+            AssertFileOfType(options.Input, ".png", options.IsRaw);
 
             try
             {
@@ -204,10 +205,17 @@ namespace ParkitectNexus.AssetTools
                     var blueprintWriter = new BlueprintWriter();
                     blueprintWriter.Write(blueprint, bitmap);
 
-                    using (var stream = new MemoryStream())
+                    if (string.IsNullOrWhiteSpace(options.Output))
                     {
-                        bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-                        Console.WriteLine(Convert.ToBase64String(stream.ToArray()));
+                        using (var stream = new MemoryStream())
+                        {
+                            bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                            Console.WriteLine(Convert.ToBase64String(stream.ToArray()));
+                        }
+                    }
+                    else
+                    {
+                        bitmap.Save(options.Output, ImageFormat.Png);
                     }
                 }
             }
@@ -223,7 +231,7 @@ namespace ParkitectNexus.AssetTools
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine("error: " + e.GetType() + ": " + e.Message + "\n" + e.StackTrace);
                 Environment.Exit(1);
             }
         }
@@ -246,7 +254,7 @@ namespace ParkitectNexus.AssetTools
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            AssertFileOfType(options.Input, ".png");
+            AssertFileOfType(options.Input, ".png", options.IsRaw);
 
             try
             {
@@ -288,7 +296,7 @@ namespace ParkitectNexus.AssetTools
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine("error: " + e.GetType() + ": " + e.Message + "\n" + e.StackTrace);
                 Environment.Exit(1);
             }
         }
@@ -297,7 +305,7 @@ namespace ParkitectNexus.AssetTools
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            AssertFileOfType(options.Input, ".txt");
+            AssertFileOfType(options.Input, ".txt", options.IsRaw);
 
             try
             {
@@ -337,7 +345,7 @@ namespace ParkitectNexus.AssetTools
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine("error: " + e.GetType() + ": " + e.Message + "\n" + e.StackTrace);
                 Environment.Exit(1);
             }
         }

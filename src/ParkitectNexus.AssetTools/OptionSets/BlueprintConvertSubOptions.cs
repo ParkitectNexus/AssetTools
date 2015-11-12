@@ -26,6 +26,9 @@ namespace ParkitectNexus.AssetTools.OptionSets
         [Option("logo", HelpText = "Path to the background image", DefaultValue = "logo.png")]
         public string Logo { get; set; }
 
+        [Option("output", HelpText = "Path to store the output to")]
+        public string Output { get; set; }
+
         [Option("logo-x", HelpText = "target X-position of logo", DefaultValue = 14)]
         public int LogoX { get; set; }
 
