@@ -15,7 +15,7 @@
 
 using System;
 using ParkitectNexus.AssetMagic;
-using ParkitectNexus.AssetMagic.Elements;
+using ParkitectNexus.AssetMagic.Data.Savegames;
 
 namespace ParkitectNexus.AssetTools
 {
@@ -29,9 +29,9 @@ namespace ParkitectNexus.AssetTools
             _savegame = savegame;
         }
 
-        public ISavegameHeader Header => _savegame.Header;
+        public SavegameHeader Header => _savegame.Header;
 
-        public IPark Park => _savegame.Park;
+        public Park Park => _savegame.Park;
 
         public int GuestCount => _savegame.GuestCount;
     }

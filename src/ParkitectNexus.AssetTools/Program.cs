@@ -20,43 +20,14 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using CommandLine;
 using Newtonsoft.Json;
-using ParkitectNexus.AssetMagic;
-using ParkitectNexus.AssetMagic.Readers;
-using ParkitectNexus.AssetMagic.Writers;
+using ParkitectNexus.AssetMagic.Converters;
 using ParkitectNexus.AssetTools.OptionSets;
 
 namespace ParkitectNexus.AssetTools
 {
-    internal class FontTools
-    {
-        public static FontFamily LoadFontFamily(byte[] buffer, out PrivateFontCollection fontCollection)
-        {
-            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            try
-            {
-                var ptr = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
-                fontCollection = new PrivateFontCollection();
-                fontCollection.AddMemoryFont(ptr, buffer.Length);
-                return fontCollection.Families[0];
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        public static FontFamily LoadFontFamily(Stream stream, out PrivateFontCollection fontCollection)
-        {
-            var buffer = new byte[stream.Length];
-            stream.Read(buffer, 0, buffer.Length);
-            return LoadFontFamily(buffer, out fontCollection);
-        }
-    }
-
     internal class Program
     {
         private static void Main(string[] args)
@@ -123,8 +94,7 @@ namespace ParkitectNexus.AssetTools
                         ? new Bitmap(new MemoryStream(Convert.FromBase64String(options.Input)))
                         : (Bitmap) Image.FromFile(options.Input))
                 {
-                    var blueprintReader = new BlueprintReader();
-                    var blueprint = blueprintReader.Read(bitmap);
+                    var blueprint = BlueprintConverter.Deserialize(bitmap);
 
                     using (var g = Graphics.FromImage(bitmap))
                     {
@@ -201,21 +171,19 @@ namespace ParkitectNexus.AssetTools
                             fonts?.Dispose();
                         }
                     }
-
-                    var blueprintWriter = new BlueprintWriter();
-                    blueprintWriter.Write(blueprint, bitmap);
+                    
 
                     if (string.IsNullOrWhiteSpace(options.Output))
                     {
                         using (var stream = new MemoryStream())
                         {
-                            bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                            BlueprintConverter.SerializeToStream(blueprint, bitmap, stream);
                             Console.WriteLine(Convert.ToBase64String(stream.ToArray()));
                         }
                     }
                     else
                     {
-                        bitmap.Save(options.Output, ImageFormat.Png);
+                        BlueprintConverter.SerializeToFile(blueprint, bitmap, options.Output);
                     }
                 }
             }
@@ -262,8 +230,7 @@ namespace ParkitectNexus.AssetTools
                         ? new Bitmap(new MemoryStream(Convert.FromBase64String(options.Input)))
                         : (Bitmap)Image.FromFile(options.Input))
                 {
-                    var blueprintReader = new BlueprintReader();
-                    var blueprint = blueprintReader.Read(bitmap);
+                    var blueprint = BlueprintConverter.Deserialize(bitmap);
 
                     Console.WriteLine(JsonConvert.SerializeObject(new BlueprintDump(blueprint),
                         new JsonSerializerSettings
@@ -314,8 +281,7 @@ namespace ParkitectNexus.AssetTools
                         ? new MemoryStream(Encoding.UTF8.GetBytes(options.Input))
                         : (Stream) File.OpenRead(options.Input))
                 {
-                    var savegameReader = new SavegameReader();
-                    var savegame = savegameReader.Deserialize(stream);
+                    var savegame = SavegameConverter.Deserialize(stream);
 
                     Console.WriteLine(JsonConvert.SerializeObject(new SavegameDump(savegame),
                         new JsonSerializerSettings
@@ -338,9 +304,9 @@ namespace ParkitectNexus.AssetTools
                 Console.WriteLine("invalid input");
                 Environment.Exit(1);
             }
-            catch (InvalidSavegameException)
+            catch (InvalidSavegameException e)
             {
-                Console.WriteLine("invalid savegame");
+                Console.WriteLine("invalid savegame: " + e.Message);
                 Environment.Exit(1);
             }
             catch (Exception e)

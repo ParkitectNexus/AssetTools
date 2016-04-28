@@ -15,7 +15,8 @@
 
 using System;
 using ParkitectNexus.AssetMagic;
-using ParkitectNexus.AssetMagic.Elements;
+using ParkitectNexus.AssetMagic.Data.Blueprints;
+using ParkitectNexus.AssetMagic.Data.Coasters;
 
 namespace ParkitectNexus.AssetTools
 {
@@ -29,7 +30,7 @@ namespace ParkitectNexus.AssetTools
             _blueprint = blueprint;
         }
 
-        public IBlueprintHeader Header => _blueprint.Header;
-        public ICoaster Coaster => _blueprint.Coaster;
+        public BlueprintHeader Header => _blueprint.Header;
+        public Coaster Coaster => _blueprint.GetElement<Coaster>();
     }
 }
