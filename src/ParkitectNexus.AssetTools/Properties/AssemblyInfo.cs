@@ -25,7 +25,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ParkitectNexus")]
 [assembly: AssemblyProduct("ParkitectNexus.AssetTools")]
-[assembly: AssemblyCopyright("Copyright © ParkitectNexus, Tim Potze 2015")]
+[assembly: AssemblyCopyright("Copyright © ParkitectNexus, Tim Potze 2016")]
 [assembly: AssemblyTrademark("ParkitectNexus")]
 [assembly: AssemblyCulture("")]
 
@@ -50,5 +50,4 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("1.2.0.0")]
-[assembly: AssemblyFileVersion("1.2.0.0")]
+[assembly: AssemblyVersion("1.3.*")]
