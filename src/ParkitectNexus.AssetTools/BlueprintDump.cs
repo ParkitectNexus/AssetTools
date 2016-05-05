@@ -22,12 +22,9 @@ namespace ParkitectNexus.AssetTools
 {
     public class BlueprintDump
     {
-        private readonly IBlueprint _blueprint;
-
         public BlueprintDump(IBlueprint blueprint)
         {
             if (blueprint == null) throw new ArgumentNullException(nameof(blueprint));
-            _blueprint = blueprint;
             var h = blueprint.Header;
             Header = new BlueprintHeader {
                 ActiveMods = h.ActiveMods,

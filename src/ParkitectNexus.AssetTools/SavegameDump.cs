@@ -21,8 +21,6 @@ namespace ParkitectNexus.AssetTools
 {
     public class SavegameDump
     {
-        private readonly ISavegame _savegame;
-
         public SavegameDump(ISavegame savegame)
         {
             if (savegame == null) throw new ArgumentNullException(nameof(savegame));
