@@ -28,9 +28,41 @@ namespace ParkitectNexus.AssetTools
         {
             if (blueprint == null) throw new ArgumentNullException(nameof(blueprint));
             _blueprint = blueprint;
+            var h = blueprint.Header;
+            Header = new BlueprintHeader {
+                ActiveMods = h.ActiveMods,
+                ApproximateCost = h.ApproximateCost,
+                DecoTypes = h.DecoTypes,
+                FlatRideTypes = h.FlatRideTypes,
+                ManufacturerName = h.ManufacturerName,
+                Name = h.Name,
+                TrackedRideTypes = h.TrackedRideTypes ?? h.Types,
+                Types = h.Types,
+                Date = h.Date,
+                GameVersion = h.GameVersion,
+                GameVersionName = h.GameVersionName,
+                SavegameVersion = h.SavegameVersion,
+                Type = h.Type
+            };
+
+            var c = blueprint.GetElement<Coaster>();
+            Coaster = c == null ? null : new Coaster {
+                CarType = c.CarType,
+                Duration = c.Duration,
+                EntranceFee = c.EntranceFee,
+                Id = c.Id,
+                Position = c.Position,
+                Rotation = c.Rotation,
+                Stats = c.Stats,
+                Track = c.Track,
+                TrainCount = c.TrainCount,
+                TrainLength = c.TrainLength,
+                WaitTime = c.WaitTime,
+                Type = c.Type
+            };
         }
 
-        public BlueprintHeader Header => _blueprint.Header;
-        public Coaster Coaster => _blueprint.GetElement<Coaster>();
+        public BlueprintHeader Header { get; set; }
+        public Coaster Coaster { get; set; }
     }
 }
