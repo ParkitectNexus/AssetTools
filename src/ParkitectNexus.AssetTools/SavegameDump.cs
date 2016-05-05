@@ -26,13 +26,46 @@ namespace ParkitectNexus.AssetTools
         public SavegameDump(ISavegame savegame)
         {
             if (savegame == null) throw new ArgumentNullException(nameof(savegame));
-            _savegame = savegame;
+           
+            var h = savegame.Header;
+            Header = new SavegameHeader {
+                ActiveMods = h.ActiveMods,
+                GuestCount = h.GuestCount,
+                Money = h.Money,
+                Name = h.Name,
+                ParkDate = h.ParkDate,
+                ParkRating = h.ParkRating,
+                Screenshot = h.Screenshot,
+                TimePlayed = h.TimePlayed,
+                Date = h.Date,
+                GameVersion = h.GameVersion,
+                GameVersionName = h.GameVersionName,
+                SavegameVersion = h.SavegameVersion,
+                Type = h.Type
+            };
+
+            var p = savegame.Park;
+            Park = new Park {
+                Guid = p.Guid,
+                Id = p.Id,
+                ParkInfo = p.ParkInfo,
+                ParkName = p.ParkName,
+                Patches = p.Patches,
+                SendGuestsHome = p.SendGuestsHome,
+                Settings = p.Settings,
+                SpawnedAtTime = p.SpawnedAtTime,
+                XSize = p.XSize,
+                YSize = p.YSize,
+                ZSize = p.ZSize,
+                Type = p.Type
+            };
+            GuestCount = (int)h.GuestCount;
         }
 
-        public SavegameHeader Header => _savegame.Header;
+        public SavegameHeader Header { get; set; }
 
-        public Park Park => _savegame.Park;
+        public Park Park { get; set; }
 
-        public int GuestCount => _savegame.GuestCount;
+        public int GuestCount { get; set; }
     }
 }
