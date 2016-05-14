@@ -41,10 +41,6 @@
       <HintPath>..\..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ParkitectNexus.AssetMagic, Version=2.0.5969.20896, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\ParkitectNexus.AssetMagic.2.0.5969.20896\lib\net45\ParkitectNexus.AssetMagic.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -66,6 +62,12 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\AssetMagic\src\ParkitectNexus.AssetMagic\ParkitectNexus.AssetMagic.csproj">
+      <Project>{ab184510-dd74-4304-a7fb-728a4220c7c4}</Project>
+      <Name>ParkitectNexus.AssetMagic</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

@@ -1,0 +1,3 @@
+[submodule "external/AssetMagic"]
+	path = external/AssetMagic
+	url = git@github.com:parkitectnexus/assetmagic
